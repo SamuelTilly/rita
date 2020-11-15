@@ -1,249 +1,308 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-	<title>Rita</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <title>Rita</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="index, follow" />
 
-  <script src='https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js'></script>
-</head>
-<style type="text/css">
-	* {
-		box-sizing: border-box;
-		user-select: none;
-	}
+    <script src="https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js"></script>
+  </head>
+  <style type="text/css">
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
 
-	html, body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-		overflow: hidden;
-		font-size: 14px;
-		font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
-	}
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+        sans-serif, Apple Color Emoji, Segoe UI Emoji;
+    }
 
-	#viewport, #result {
-		position: fixed;
-		top: 0;
-		right: 0;
-		border: 1px solid #333;
-		background: #fff;
-	}
+    body {
+      background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQUlEQVQYlWOwO3X+v92p8/8ZCAGiFWIDD27Y/X9ww46wZqIVYgUV5+3+V5wnQjfRCrGBTzPj/n+aGUdYM9EKsQEAvrAs3dt7J2YAAAAASUVORK5CYII=)
+        repeat;
+    }
 
-	#viewport {
-		right: -100%;
-	}
+    #drawarea {
+      box-shadow: 0px 0px 100px rgba(0, 0, 0, 0.25);
+      border: 2px solid rgba(0, 0, 0, 0.45);
+    }
 
-	#colorselect {
-		position: fixed;
-		bottom: 0;
-		background: #f9f9f9;
-	}
+    #viewport,
+    #result {
+      position: fixed;
+      top: 0;
+      right: 0;
+      border: 1px solid #333;
+      background: #fff;
+    }
 
-	#colorselect > div {
-		display: inline-block;
-		width: 2em;
-		height: 2em;
-		text-align: center;
-		line-height: 2em;
-		border: 1px solid #333;
-	}
+    #result {
+      transform: scale(2);
+      right: 50px;
+      top: 50px;
+    }
 
-	#colorselect > .selected {
-		border-color: #00ff00;
-	}
-</style>
-<script type="text/javascript">
-	let currentColor
-	let drawAreaScale = 100
+    #viewport {
+      right: -100%;
+    }
 
-	function getContext(el) {
-		const canvas = document.getElementById(el)
-		ctx = canvas.getContext('2d')
-		return ctx
-	}
+    #colorselect {
+      position: fixed;
+      bottom: 0;
+      background: #333;
+      border: 0.5vmax solid #333;
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      box-shadow: 0px 0px 10px #333;
+    }
 
-	function addPressEvent(el, cb) {
-		el.addEventListener('touchstart', cb)
-		el.addEventListener('mousedown', cb)
-	}
+    #colorselect > div {
+      flex: 1 auto;
+      width: 4vmax;
+      height: 4vmax;
+      text-align: center;
+      line-height: 4vmax;
+      border: 0.5vmax solid transparent;
+      font-size: 2vmax;
+      font-weight: bold;
+    }
 
-	function init() {
-		const img = loadImage()
-		const viewportContext = getContext('viewport')
-		const resultContext = getContext('result')
-		const drawAreaContext = getContext('drawarea')
-		const drawarea = document.getElementById('drawarea')
+    #colorselect > .selected {
+      border-color: #00ff00;
+    }
+  </style>
+  <script type="text/javascript">
+    let currentColor;
+    let drawAreaScale = 100;
+    const imageSrc = "file50x50.gif";
 
-		const panzoomInstance = panzoom(drawarea, {
-			maxZoom: 1,
-			minZoom: 0.1,
-		  initialZoom: 0.5,
-			zoomDoubleClickSpeed: 1
-		})
+    function getContext(el) {
+      const canvas = document.getElementById(el);
+      ctx = canvas.getContext("2d");
+      return ctx;
+    }
 
-		img.onload = function() {
-  		viewportContext.canvas.width = img.width
-  		viewportContext.canvas.height = img.height
-  		viewportContext.drawImage(img, 0, 0)
+    function addPressEvent(el, cb) {
+      el.addEventListener("touchstart", cb);
+      el.addEventListener("mousedown", cb);
+    }
 
-  		resultContext.canvas.width = img.width
-  		resultContext.canvas.height = img.height
+    function init() {
+      const img = loadImage();
+      const viewportContext = getContext("viewport");
+      const resultContext = getContext("result");
+      const drawAreaContext = getContext("drawarea");
+      const drawarea = document.getElementById("drawarea");
 
-  		drawAreaContext.canvas.width = img.width * drawAreaScale
-			drawAreaContext.canvas.height = img.height * drawAreaScale
+      const panzoomInstance = panzoom(drawarea, {
+        maxZoom: 1,
+        minZoom: 0.1,
+        initialZoom: 0.5,
+        zoomDoubleClickSpeed: 1,
+      });
 
-			drawAreaContext.fillStyle = '#f9f9f9'
-			drawAreaContext.fillRect(0,0, drawAreaContext.canvas.width, drawAreaContext.canvas.height)
+      img.onload = function () {
+        viewportContext.canvas.width = img.width;
+        viewportContext.canvas.height = img.height;
+        viewportContext.drawImage(img, 0, 0);
 
-  		drawSelectableColors(getColorList(viewportContext, drawAreaContext, img))
-  	}
+        resultContext.canvas.width = img.width;
+        resultContext.canvas.height = img.height;
 
-  	function getEventPosition(canvas, evt) {
-		  var rect = canvas.getBoundingClientRect();
-		  return {
-		    x: (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left,
-		    y: (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top
-		  };
-		}
+        drawAreaContext.canvas.width = img.width * drawAreaScale;
+        drawAreaContext.canvas.height = img.height * drawAreaScale;
 
-		addPressEvent(drawAreaContext.canvas, (evt) => {
-  		attemptDraw(getEventPosition(drawAreaContext.canvas, evt),
-  			viewportContext,
-  			drawAreaContext,
-  			resultContext,
-				img,
-				panzoomInstance)
-  	})
-		/*window.addEventListener("resize", () => draw(getContext(), img))*/
-	}
+        drawAreaContext.fillStyle = "#f9f9f9";
+        drawAreaContext.fillRect(
+          0,
+          0,
+          drawAreaContext.canvas.width,
+          drawAreaContext.canvas.height
+        );
 
-	function loadImage() {
-		img = new Image();
-		img.src = 'file24.gif';
-		img.crossOrigin = "anonymous"
-		return img
-	}
+        drawSelectableColors(
+          getColorList(viewportContext, drawAreaContext, img)
+        );
+      };
 
-	function drawSelectableColors(colorList) {
-		const container = document.getElementById('colorselect')
+      function getEventPosition(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+          x: (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left,
+          y: (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top,
+        };
+      }
 
-		colorList.forEach((color, index) => {
-			const colorEl = document.createElement("div")
-			colorEl.style.background = color
-			colorEl.style.color = getContrast50(color)
-			colorEl.innerHTML = index + 1
-			addPressEvent(colorEl, function() {
-				currentColor = color
+      addPressEvent(drawAreaContext.canvas, (evt) => {
+        attemptDraw(
+          getEventPosition(drawAreaContext.canvas, evt),
+          viewportContext,
+          drawAreaContext,
+          resultContext,
+          img,
+          panzoomInstance
+        );
+      });
+      /*window.addEventListener("resize", () => draw(getContext(), img))*/
+    }
 
-				for (var i = 0; i < container.children.length; i++) {
-					container.children[i].className  = ''
-				}
+    function loadImage() {
+      img = new Image();
+      img.src = imageSrc;
+      img.crossOrigin = "anonymous";
+      return img;
+    }
 
-				colorEl.className = 'selected'
-			})
+    function drawSelectableColors(colorList) {
+      const container = document.getElementById("colorselect");
 
-			container.appendChild(colorEl)
-		})
-	}
+      colorList.forEach((color, index) => {
+        const colorEl = document.createElement("div");
+        colorEl.style.background = color;
+        colorEl.style.color = getContrast50(color);
+        colorEl.innerHTML = index + 1;
+        addPressEvent(colorEl, function () {
+          currentColor = color;
 
-	function drawImageScaled(viewportContext, img) {
-		const canvas = viewportContext.canvas
-		const hRatio = canvas.width  / img.width
-		const vRatio = canvas.height / img.height
-		const ratio  = Math.min ( hRatio, vRatio )
-		const centerShift_x = ( canvas.width - img.width*ratio ) / 2
-		const centerShift_y = ( canvas.height - img.height*ratio ) / 2
+          for (var i = 0; i < container.children.length; i++) {
+            container.children[i].className = "";
+          }
 
-		viewportContext.clearRect(0, 0, canvas.width, canvas.height)
-		viewportContext.drawImage(img, 0, 0, img.width, img.height,
-			centerShift_x,centerShift_y,img.width*ratio, img.height*ratio)
-	}
+          colorEl.className = "selected";
+        });
 
-	function componentToHex(c) {
-		let hex = c.toString(16);
-		return hex.length == 1 ? "0" + hex : hex;
-	}
+        container.appendChild(colorEl);
+      });
+    }
 
-	function rgbToHex(r, g, b) {
-		return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-	}
+    function drawImageScaled(viewportContext, img) {
+      const canvas = viewportContext.canvas;
+      const hRatio = canvas.width / img.width;
+      const vRatio = canvas.height / img.height;
+      const ratio = Math.min(hRatio, vRatio);
+      const centerShift_x = (canvas.width - img.width * ratio) / 2;
+      const centerShift_y = (canvas.height - img.height * ratio) / 2;
 
-	function getContrast50(hexcolor) {
-    return (parseInt(hexcolor.replace('#', ''), 16) > 0xffffff/2) ? 'black':'white';
-	}
+      viewportContext.clearRect(0, 0, canvas.width, canvas.height);
+      viewportContext.drawImage(
+        img,
+        0,
+        0,
+        img.width,
+        img.height,
+        centerShift_x,
+        centerShift_y,
+        img.width * ratio,
+        img.height * ratio
+      );
+    }
 
-	function attemptDraw(pos, viewportContext, drawAreaContext, resultContext, img, panzoomInstance) {
-		const scale = panzoomInstance.getTransform().scale
-		const x = Math.ceil((pos.x/scale)/drawAreaScale) - 1
-		const y = Math.ceil((pos.y/scale)/drawAreaScale) - 1
+    function componentToHex(c) {
+      let hex = c.toString(16);
+      return hex.length == 1 ? "0" + hex : hex;
+    }
 
-		const [r, g, b] = viewportContext.getImageData(
-			x,
-			y,
-			img.width,
-			img.height
-		).data
+    function rgbToHex(r, g, b) {
+      return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    }
 
-		const color = rgbToHex(r, g, b)
+    function getContrast50(hexcolor) {
+      return parseInt(hexcolor.replace("#", ""), 16) > 0xffffff / 2
+        ? "black"
+        : "white";
+    }
 
-		if (currentColor === color) {
-			drawAreaContext.fillStyle = color
-			drawAreaContext.fillRect(
-				x * drawAreaScale,
-				y * drawAreaScale,
-				drawAreaScale,
-				drawAreaScale
-			)
+    function attemptDraw(
+      pos,
+      viewportContext,
+      drawAreaContext,
+      resultContext,
+      img,
+      panzoomInstance
+    ) {
+      const scale = panzoomInstance.getTransform().scale;
+      const x = Math.ceil(pos.x / scale / drawAreaScale) - 1;
+      const y = Math.ceil(pos.y / scale / drawAreaScale) - 1;
 
-			resultContext.fillStyle = color
-			resultContext.fillRect(
-				x,
-				y,
-				1,
-				1
-			)
-		}
-	}
+      const [r, g, b] = viewportContext.getImageData(
+        x,
+        y,
+        img.width,
+        img.height
+      ).data;
 
-	function getColorList(viewportContext, drawAreaContext, img) {
-		const result = []
-		for (let x = 0; x < img.width; x++) {
-			for (let y = 0; y < img.height; y++) {
-				const [r, g, b] = viewportContext.getImageData(x, y, img.width, img.height).data
-				const color = rgbToHex(r, g, b)
-				const colorIndex = result.indexOf(color) > -1
-					? result.indexOf(color)
-					: result.length
+      const color = rgbToHex(r, g, b);
 
+      if (currentColor === color) {
+        drawAreaContext.fillStyle = color;
+        drawAreaContext.fillRect(
+          x * drawAreaScale,
+          y * drawAreaScale,
+          drawAreaScale,
+          drawAreaScale
+        );
 
-				drawAreaContext.beginPath();
-				drawAreaContext.rect(x * drawAreaScale, y * drawAreaScale, drawAreaScale, drawAreaScale);
-				drawAreaContext.stroke();
-				drawAreaContext.fillStyle = '#000'
-				drawAreaContext.font = (0.3 * drawAreaScale) + "px Arial";
-				drawAreaContext.textAlign = "center";
-				drawAreaContext.fillText(colorIndex + 1,
-					x * drawAreaScale + (drawAreaScale/2),
-					y * drawAreaScale + (drawAreaScale/2) + (0.3 * drawAreaScale)/2);
+        resultContext.fillStyle = color;
+        resultContext.fillRect(x, y, 1, 1);
+      }
+    }
 
-				if (!result.includes(color)) {
-					result.push(color)
-				}
-			}
-		}
-		return result
-	}
+    function getColorList(viewportContext, drawAreaContext, img) {
+      const result = [];
+      for (let x = 0; x < img.width; x++) {
+        for (let y = 0; y < img.height; y++) {
+          const [r, g, b] = viewportContext.getImageData(
+            x,
+            y,
+            img.width,
+            img.height
+          ).data;
+          const color = rgbToHex(r, g, b);
+          const colorIndex =
+            result.indexOf(color) > -1 ? result.indexOf(color) : result.length;
 
-	document.addEventListener("DOMContentLoaded", init);
-</script>
-<body>
-	<canvas id="drawarea"></canvas>
-	<canvas id="viewport"></canvas>
-	<canvas id="result"></canvas>
-	<div id="colorselect"></div>
-</body>
+          drawAreaContext.beginPath();
+          drawAreaContext.rect(
+            x * drawAreaScale,
+            y * drawAreaScale,
+            drawAreaScale,
+            drawAreaScale
+          );
+          drawAreaContext.stroke();
+          drawAreaContext.fillStyle = "#000";
+          drawAreaContext.font = 0.3 * drawAreaScale + "px Arial";
+          drawAreaContext.textAlign = "center";
+          drawAreaContext.fillText(
+            colorIndex + 1,
+            x * drawAreaScale + drawAreaScale / 2,
+            y * drawAreaScale + drawAreaScale / 2 + (0.3 * drawAreaScale) / 2
+          );
+
+          if (!result.includes(color)) {
+            result.push(color);
+          }
+        }
+      }
+      return result;
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+  <body>
+    <canvas id="drawarea"></canvas>
+    <canvas id="viewport"></canvas>
+    <canvas id="result"></canvas>
+    <div id="colorselect"></div>
+  </body>
 </html>
