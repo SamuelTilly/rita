@@ -22,6 +22,7 @@
 		height: 100%;
 		overflow: hidden;
 		font-size: 14px;
+		font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
 	}
 
 	#viewport, #result {
@@ -35,7 +36,6 @@
 	#viewport {
 		right: -100%;
 	}
-
 
 	#colorselect {
 		position: fixed;
@@ -66,6 +66,11 @@
 		return ctx
 	}
 
+	function addPressEvent(el, cb) {
+		el.addEventListener('touchstart', cb)
+		el.addEventListener('mousedown', cb)
+	}
+
 	function init() {
 		const img = loadImage()
 		const viewportContext = getContext('viewport')
@@ -73,7 +78,8 @@
 		const drawAreaContext = getContext('drawarea')
 		const drawarea = document.getElementById('drawarea')
 
-		panzoom(drawarea, {
+		const panzoomInstance = panzoom(drawarea, {
+			maxZoom: 1,
 			minZoom: 0.1,
 		  initialZoom: 0.5,
 			zoomDoubleClickSpeed: 1
@@ -88,13 +94,10 @@
   		resultContext.canvas.height = img.height
 
   		drawAreaContext.canvas.width = img.width * drawAreaScale
-  		drawAreaContext.canvas.height = img.height * drawAreaScale
+			drawAreaContext.canvas.height = img.height * drawAreaScale
 
-  		/*resultContext.globalCompositeOperation = 'luminosity'
-  		resultContext.canvas.width = img.width
-  		resultContext.canvas.height = img.height
-  		resultContext.drawImage(img, 0, 0)
-  		resultContext.globalCompositeOperation = 'source-over'*/
+			drawAreaContext.fillStyle = '#f9f9f9'
+			drawAreaContext.fillRect(0,0, drawAreaContext.canvas.width, drawAreaContext.canvas.height)
 
   		drawSelectableColors(getColorList(viewportContext, drawAreaContext, img))
   	}
@@ -107,15 +110,14 @@
 		  };
 		}
 
-  	drawAreaContext.canvas.addEventListener('touchstart', (evt) => {
-  		console.log(evt, getEventPosition(drawAreaContext.canvas, evt))
-  		attemptDraw(getEventPosition(drawAreaContext.canvas, evt), 
-  			viewportContext, 
-  			drawAreaContext, 
-  			resultContext, 
-  			img)
+		addPressEvent(drawAreaContext.canvas, (evt) => {
+  		attemptDraw(getEventPosition(drawAreaContext.canvas, evt),
+  			viewportContext,
+  			drawAreaContext,
+  			resultContext,
+				img,
+				panzoomInstance)
   	})
-
 		/*window.addEventListener("resize", () => draw(getContext(), img))*/
 	}
 
@@ -134,7 +136,7 @@
 			colorEl.style.background = color
 			colorEl.style.color = getContrast50(color)
 			colorEl.innerHTML = index + 1
-			colorEl.addEventListener('touchstart', function() {
+			addPressEvent(colorEl, function() {
 				currentColor = color
 
 				for (var i = 0; i < container.children.length; i++) {
@@ -171,42 +173,49 @@
 	}
 
 	function getContrast50(hexcolor) {
-    return (parseInt(hexcolor, 16) > 0xffffff/2) ? 'black':'white';
+    return (parseInt(hexcolor.replace('#', ''), 16) > 0xffffff/2) ? 'black':'white';
 	}
 
-	function attemptDraw(pos, viewportContext, drawAreaContext, resultContext, img) {
-		const {x, y} = pos
+	function attemptDraw(pos, viewportContext, drawAreaContext, resultContext, img, panzoomInstance) {
+		const scale = panzoomInstance.getTransform().scale
+		const x = Math.ceil((pos.x/scale)/drawAreaScale) - 1
+		const y = Math.ceil((pos.y/scale)/drawAreaScale) - 1
+
 		const [r, g, b] = viewportContext.getImageData(
-			x / drawAreaScale, 
-			y / drawAreaScale, 
-			img.width, 
+			x,
+			y,
+			img.width,
 			img.height
 		).data
 
 		const color = rgbToHex(r, g, b)
 
-		console.log(currentColor, color)
 		if (currentColor === color) {
-			console.log('should paint something?')
-			drawAreaContext.fillStyle = color;
-			drawAreaContext.fillRect(x, y, drawAreaScale, drawAreaScale);
-			/*drawAreaContext.beginPath()
-			drawAreaContext.rect(x, y, drawAreaScale, drawAreaScale)
-			drawAreaContext.stroke()*/
+			drawAreaContext.fillStyle = color
+			drawAreaContext.fillRect(
+				x * drawAreaScale,
+				y * drawAreaScale,
+				drawAreaScale,
+				drawAreaScale
+			)
+
+			resultContext.fillStyle = color
+			resultContext.fillRect(
+				x,
+				y,
+				1,
+				1
+			)
 		}
 	}
 
 	function getColorList(viewportContext, drawAreaContext, img) {
-		/*const container = document.getElementById('drawarea')*/
-	
-		/*container.style.width = (img.width * 2) + 'em'*/
-
 		const result = []
-		for (let x = 1; x < img.width; x++) {
-			for (let y = 1; y < img.height; y++) {
+		for (let x = 0; x < img.width; x++) {
+			for (let y = 0; y < img.height; y++) {
 				const [r, g, b] = viewportContext.getImageData(x, y, img.width, img.height).data
 				const color = rgbToHex(r, g, b)
-				const colorIndex = result.indexOf(color) > -1 
+				const colorIndex = result.indexOf(color) > -1
 					? result.indexOf(color)
 					: result.length
 
@@ -214,26 +223,12 @@
 				drawAreaContext.beginPath();
 				drawAreaContext.rect(x * drawAreaScale, y * drawAreaScale, drawAreaScale, drawAreaScale);
 				drawAreaContext.stroke();
-				ctx.font = "30px Arial";
-				ctx.textAlign = "center";
-				ctx.fillText(colorIndex + 1, 
-					x * drawAreaScale + (drawAreaScale/2), 
-					y * drawAreaScale + (drawAreaScale/2) + 15); 
-
-				/*const colorEl = document.createElement("div")
-				container.appendChild(colorEl)
-
-				colorEl.innerHTML = colorIndex + 1
-
-				colorEl.addEventListener('touchstart', function() {
-					if (currentColor === colorIndex) {
-						resultContext.fillStyle = "rgba("+r+","+g+","+b+",255)";
-						resultContext.fillRect( x, y, 1, 1 )
-
-						colorEl.style.background = color
-						colorEl.style.color = getContrast50(color)
-					}
-				})*/
+				drawAreaContext.fillStyle = '#000'
+				drawAreaContext.font = (0.3 * drawAreaScale) + "px Arial";
+				drawAreaContext.textAlign = "center";
+				drawAreaContext.fillText(colorIndex + 1,
+					x * drawAreaScale + (drawAreaScale/2),
+					y * drawAreaScale + (drawAreaScale/2) + (0.3 * drawAreaScale)/2);
 
 				if (!result.includes(color)) {
 					result.push(color)
