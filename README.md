@@ -4,6 +4,8 @@ Simple app for zen-like-coloring of a hidden image
 
 ## TODO
 
+* Ignore pixels with alpha below 255
+
 ### Colorselector should display if any given color is done
 
 * Checkbox on colorselect box
@@ -11,7 +13,8 @@ Simple app for zen-like-coloring of a hidden image
 
 ### Storage
 
-* localStorage or websql?
+* IndexedDB https://github.com/jakearchibald/idb
+  * https://caniuse.com/indexeddb
 
 ### Upload image and use canvas to pixelate and simplify colors?
 
@@ -20,7 +23,7 @@ Simple app for zen-like-coloring of a hidden image
 * Sort list of colors
 * Split list of colors by how many we want and create a color pallet.
 * Apply color pallet to image https://stackoverflow.com/questions/16087529/limit-canvas-colors-to-a-specific-array
-* Save image information on client localStorage, webdb? or similar.
+* Save image information on client using IndexedDB
 
 ### Setup a build job
 
