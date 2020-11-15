@@ -32,7 +32,7 @@
         repeat;
     }
 
-    #drawarea {
+    #drawArea {
       box-shadow: 0px 0px 100px rgba(0, 0, 0, 0.25);
       border: 2px solid rgba(0, 0, 0, 0.45);
     }
@@ -95,17 +95,16 @@
 
     function addPressEvent(el, cb) {
       el.addEventListener("touchstart", cb);
-      el.addEventListener("mousedown", cb);
+      el.addEventListener("click", cb);
     }
 
     function init() {
       const img = loadImage();
       const viewportContext = getContext("viewport");
       const resultContext = getContext("result");
-      const drawAreaContext = getContext("drawarea");
-      const drawarea = document.getElementById("drawarea");
+      const drawAreaContext = getContext("drawArea");
 
-      const panzoomInstance = panzoom(drawarea, {
+      const panzoomInstance = panzoom(drawAreaContext.canvas, {
         maxZoom: 1,
         minZoom: 0.1,
         initialZoom: 0.5,
@@ -131,9 +130,9 @@
           drawAreaContext.canvas.height
         );
 
-        drawSelectableColors(
-          getColorList(viewportContext, drawAreaContext, img)
-        );
+        const colorList = getColorList(viewportContext, drawAreaContext, img);
+
+        drawSelectableColors(colorList);
       };
 
       function getEventPosition(canvas, evt) {
@@ -154,7 +153,6 @@
           panzoomInstance
         );
       });
-      /*window.addEventListener("resize", () => draw(getContext(), img))*/
     }
 
     function loadImage() {
@@ -167,11 +165,12 @@
     function drawSelectableColors(colorList) {
       const container = document.getElementById("colorselect");
 
-      colorList.forEach((color, index) => {
+      Object.keys(colorList).forEach((color, index) => {
         const colorEl = document.createElement("div");
         colorEl.style.background = color;
         colorEl.style.color = getContrast50(color);
         colorEl.innerHTML = index + 1;
+        colorEl.dataset.available = colorList[color];
         addPressEvent(colorEl, function () {
           currentColor = color;
 
@@ -181,6 +180,10 @@
 
           colorEl.className = "selected";
         });
+
+        if (index === 0) {
+          colorEl.click();
+        }
 
         container.appendChild(colorEl);
       });
@@ -238,8 +241,8 @@
       const [r, g, b] = viewportContext.getImageData(
         x,
         y,
-        img.width,
-        img.height
+        1,
+        1
       ).data;
 
       const color = rgbToHex(r, g, b);
@@ -258,49 +261,66 @@
       }
     }
 
-    function getColorList(viewportContext, drawAreaContext, img) {
+    function forEachPixel(viewportContext, cb) {
       const result = [];
-      for (let x = 0; x < img.width; x++) {
-        for (let y = 0; y < img.height; y++) {
+      const { width, height } = viewportContext.canvas;
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
           const [r, g, b] = viewportContext.getImageData(
             x,
             y,
-            img.width,
-            img.height
+            1,
+            1
           ).data;
+
           const color = rgbToHex(r, g, b);
-          const colorIndex =
-            result.indexOf(color) > -1 ? result.indexOf(color) : result.length;
+          const unique = !result.includes(color);
 
-          drawAreaContext.beginPath();
-          drawAreaContext.rect(
-            x * drawAreaScale,
-            y * drawAreaScale,
-            drawAreaScale,
-            drawAreaScale
-          );
-          drawAreaContext.stroke();
-          drawAreaContext.fillStyle = "#000";
-          drawAreaContext.font = 0.3 * drawAreaScale + "px Arial";
-          drawAreaContext.textAlign = "center";
-          drawAreaContext.fillText(
-            colorIndex + 1,
-            x * drawAreaScale + drawAreaScale / 2,
-            y * drawAreaScale + drawAreaScale / 2 + (0.3 * drawAreaScale) / 2
-          );
-
-          if (!result.includes(color)) {
+          if (unique) {
             result.push(color);
           }
+
+          cb(x, y, color, result.indexOf(color), unique);
         }
       }
+    }
+
+    function getColorList(viewportContext, drawAreaContext, img) {
+      const result = {};
+
+      forEachPixel(viewportContext, (x, y, color, colorIndex, unique) => {
+        drawAreaContext.beginPath();
+        drawAreaContext.rect(
+          x * drawAreaScale,
+          y * drawAreaScale,
+          drawAreaScale,
+          drawAreaScale
+        );
+        drawAreaContext.stroke();
+        drawAreaContext.fillStyle = "#000";
+        drawAreaContext.font = 0.3 * drawAreaScale + "px Arial";
+        drawAreaContext.textAlign = "center";
+        drawAreaContext.fillText(
+          colorIndex + 1,
+          x * drawAreaScale + drawAreaScale / 2,
+          y * drawAreaScale + drawAreaScale / 2 + (0.3 * drawAreaScale) / 2
+        );
+
+        if (unique) {
+          result[color] = 0;
+        } else {
+          result[color] += 1;
+        }
+      });
+
       return result;
     }
 
     document.addEventListener("DOMContentLoaded", init);
   </script>
   <body>
-    <canvas id="drawarea"></canvas>
+    <canvas id="drawArea"></canvas>
+
     <canvas id="viewport"></canvas>
     <canvas id="result"></canvas>
     <div id="colorselect"></div>
