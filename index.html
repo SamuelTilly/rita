@@ -94,8 +94,7 @@
     }
 
     function addPressEvent(el, cb) {
-      el.addEventListener("touchstart", cb);
-      el.addEventListener("click", cb);
+      el.addEventListener("mouseup", cb);
     }
 
     function init() {
@@ -109,6 +108,12 @@
         minZoom: 0.1,
         initialZoom: 0.5,
         zoomDoubleClickSpeed: 1,
+        bounds: true,
+        boundsPadding: 0.1,
+        smoothScroll: true,
+        onTouch: function (evt) {
+          return false;
+        },
       });
 
       img.onload = function () {
@@ -171,7 +176,8 @@
         colorEl.style.color = getContrast50(color);
         colorEl.innerHTML = index + 1;
         colorEl.dataset.available = colorList[color];
-        addPressEvent(colorEl, function () {
+
+        function eventHandler() {
           currentColor = color;
 
           for (var i = 0; i < container.children.length; i++) {
@@ -179,7 +185,10 @@
           }
 
           colorEl.className = "selected";
-        });
+        }
+
+        addPressEvent(colorEl, eventHandler);
+        colorEl.addEventListener("click", eventHandler);
 
         if (index === 0) {
           colorEl.click();
