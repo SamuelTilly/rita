@@ -93,8 +93,26 @@
       return ctx;
     }
 
+    function isTouchDevice() {
+      if ("ontouchstart" in window || window.TouchEvent)
+          return true;
+
+      if (window.DocumentTouch && document instanceof DocumentTouch)
+          return true;
+
+      const prefixes = ["", "-webkit-", "-moz-", "-o-", "-ms-"];
+      const queries = prefixes.map(prefix => `(${prefix}touch-enabled)`);
+
+      return window.matchMedia(queries.join(",")).matches;
+    }
+
     function addPressEvent(el, cb) {
-      el.addEventListener("mouseup", cb);
+      if (isTouchDevice()) {
+        console.log('touch event')
+        el.addEventListener("touchend", cb);
+      } else {
+        el.addEventListener("mouseup", cb);
+      }
     }
 
     function init() {
@@ -110,10 +128,7 @@
         zoomDoubleClickSpeed: 1,
         bounds: true,
         boundsPadding: 0.1,
-        smoothScroll: true,
-        onTouch: function (evt) {
-          return false;
-        },
+        smoothScroll: true
       });
 
       img.onload = function () {
@@ -143,8 +158,8 @@
       function getEventPosition(canvas, evt) {
         var rect = canvas.getBoundingClientRect();
         return {
-          x: (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left,
-          y: (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top,
+          x: (evt.changedTouches ? evt.changedTouches[0].clientX : evt.clientX) - rect.left,
+          y: (evt.changedTouches ? evt.changedTouches[0].clientY : evt.clientY) - rect.top,
         };
       }
 
@@ -188,10 +203,9 @@
         }
 
         addPressEvent(colorEl, eventHandler);
-        colorEl.addEventListener("click", eventHandler);
 
         if (index === 0) {
-          colorEl.click();
+          eventHandler()
         }
 
         container.appendChild(colorEl);
