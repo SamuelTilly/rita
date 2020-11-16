@@ -1,0 +1,36 @@
+{
+  "name": "rita",
+  "version": "1.0.0",
+  "description": "Simple app for zen-like-coloring of a hidden image",
+  "main": "src/index.js",
+  "repository": "git@github.com:SamuelTilly/rita.git",
+  "author": "Samuel Tilly <28404+SamuelTilly@users.noreply.github.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "parcel index.html file50x50.gif",
+    "build": "parcel build index.html file50x50.gif",
+    "lint": "standard src && stylelint 'src/**/*.scss' --fix"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "parcel-bundler": "^1.12.4",
+    "sass": "^1.29.0",
+    "standard": "^16.0.2",
+    "stylelint": "^13.7.2",
+    "stylelint-config-standard": "^20.0.0"
+  },
+  "standard": {
+    "parser": "babel-eslint",
+    "globals": [
+      "panzoom",
+      "DocumentTouch"
+    ],
+    "env": [
+      "browser"
+    ]
+  },
+  "dependencies": {
+    "panzoom": "^9.4.1"
+  }
+}
