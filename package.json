@@ -31,6 +31,7 @@
     ]
   },
   "dependencies": {
+    "dob": "^2.5.10",
     "panzoom": "^9.4.1"
   }
 }

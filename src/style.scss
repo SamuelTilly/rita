@@ -77,7 +77,7 @@ body {
   position: fixed;
   bottom: 0;
   background: #333;
-  border: 0.5vmax solid #333;
+  border: 0.25vmax solid #333;
   display: flex;
   flex-wrap: wrap;
   width: 100%;
@@ -86,15 +86,27 @@ body {
 
 #colorselect > div {
   flex: 1 auto;
-  width: 4vmax;
-  height: 4vmax;
+  width: 5vmax;
+  height: 5vmax;
   text-align: center;
-  line-height: 4vmax;
-  border: 0.5vmax solid transparent;
   font-size: 2vmax;
   font-weight: bold;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.25vmax solid #333;
+}
+
+#colorselect > div > div {
+  width: 0.5vmax;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background-color: #0f0;
 }
 
 #colorselect > .selected {
-  border-color: #0f0;
+  box-shadow: 0 0 0px 1vmax #333;
+  z-index: 1;
 }

@@ -833,7 +833,7 @@
     "@babel/types" "^7.4.4"
     esutils "^2.0.2"
 
-"@babel/runtime@^7.4.4", "@babel/runtime@^7.8.4":
+"@babel/runtime@^7.0.0", "@babel/runtime@^7.4.4", "@babel/runtime@^7.8.4":
   version "7.12.5"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.12.5.tgz#410e7e487441e1b360c29be715d870d9b985882e"
   integrity sha512-plcc+hbExy3McchJCEQG3knOsuh3HH+Prx1P6cLIkET/0dLuQDEnrT+s27Axgc9bqfsmNUNHfscgMUdBpC9xfg==
@@ -2293,6 +2293,11 @@ depd@~1.1.2:
   resolved "https://registry.yarnpkg.com/depd/-/depd-1.1.2.tgz#9bcd52e14c097763e749b274c4346ed2e560b5a9"
   integrity sha1-m81S4UwJd2PnSbJ0xDRu0uVgtak=
 
+dependency-inject@^1.1.5:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/dependency-inject/-/dependency-inject-1.1.6.tgz#86ee329e8a7ed5b9d4ef392a88e47717268a6fc4"
+  integrity sha512-hoaCV/6D1i4/3E2OUjEFN/my3OLHYpi6olAYSHaqmaksQLoWrLpzh4rcUpoBEoYey3tUEGohepbvuqK0iLoPKg==
+
 des.js@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/des.js/-/des.js-1.0.1.tgz#5382142e1bdc53f85d86d53e5f4aa7deb91e0843"
@@ -2321,6 +2326,15 @@ dir-glob@^3.0.1:
   integrity sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==
   dependencies:
     path-type "^4.0.0"
+
+dob@^2.5.10:
+  version "2.5.10"
+  resolved "https://registry.yarnpkg.com/dob/-/dob-2.5.10.tgz#ef1c347615d4e9703981135e59efbf0f94713986"
+  integrity sha512-Kjie7zVk0SUTUbGjY7V5bjYhIZEfMA/o7kh28+js/hz9ETK0Ad0q2IpvE2qIuaSfBywfJ5nhhj17YJILlENRBw==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    dependency-inject "^1.1.5"
+    lodash.clonedeep "^4.5.0"
 
 doctrine@1.5.0:
   version "1.5.0"
@@ -4050,6 +4064,11 @@ lodash.clone@^4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/lodash.clone/-/lodash.clone-4.5.0.tgz#195870450f5a13192478df4bc3d23d2dea1907b6"
   integrity sha1-GVhwRQ9aExkkeN9Lw9I9LeoZB7Y=
+
+lodash.clonedeep@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
+  integrity sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=
 
 lodash.memoize@^4.1.2:
   version "4.1.2"

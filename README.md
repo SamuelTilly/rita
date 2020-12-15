@@ -5,6 +5,15 @@ Simple app for zen-like-coloring of a hidden image
 ## TODO
 
 * Ignore pixels with alpha below 255
+* Add clear all button with warning before comitting
+* Add replay button, clears and recolor all pixels
+* Add support for ctrl-z.. not sure why, but fun.
+
+### Adding a state library
+
+* Store each clicked pixel position
+* Store total of each color
+* Store color count for each clicked pixel
 
 ### Colorselector should display if any given color is done
 

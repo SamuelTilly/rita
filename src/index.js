@@ -1,24 +1,15 @@
 import panzoom from 'panzoom'
+import { isTouchDevice } from './common/validate'
+import { getContrast50 } from './common/color'
+import { getContext, getColorList, getEventPosition, forEachPixel, getColorAtPos } from './common/canvas'
+import { state } from './state'
+import { observe } from 'dob'
 
-let currentColor
-const drawAreaScale = 100
-const imageSrc = '/file50x50.gif'
+observe(() => {
+  console.log('state changed', state)
 
-function getContext (el) {
-  const canvas = document.getElementById(el)
-  return canvas.getContext('2d')
-}
-
-function isTouchDevice () {
-  if ('ontouchstart' in window || window.TouchEvent) { return true }
-
-  if (window.DocumentTouch && document instanceof DocumentTouch) { return true }
-
-  const prefixes = ['', '-webkit-', '-moz-', '-o-', '-ms-']
-  const queries = prefixes.map(prefix => `(${prefix}touch-enabled)`)
-
-  return window.matchMedia(queries.join(',')).matches
-}
+  drawSelectableColors(state)
+})
 
 function addPressEvent (el, cb) {
   if (isTouchDevice()) {
@@ -35,15 +26,7 @@ function init () {
   const resultContext = getContext('result')
   const drawAreaContext = getContext('drawArea')
 
-  const panzoomInstance = panzoom(drawAreaContext.canvas, {
-    maxZoom: 1,
-    minZoom: 0.1,
-    initialZoom: 0.5,
-    zoomDoubleClickSpeed: 1,
-    bounds: true,
-    boundsPadding: 0.1,
-    smoothScroll: true
-  })
+  const panzoomInstance = panzoom(drawAreaContext.canvas, state.panzoom)
 
   img.onload = function () {
     viewportContext.canvas.width = img.width
@@ -53,8 +36,8 @@ function init () {
     resultContext.canvas.width = img.width
     resultContext.canvas.height = img.height
 
-    drawAreaContext.canvas.width = img.width * drawAreaScale
-    drawAreaContext.canvas.height = img.height * drawAreaScale
+    drawAreaContext.canvas.width = img.width * state.drawAreaScale
+    drawAreaContext.canvas.height = img.height * state.drawAreaScale
 
     drawAreaContext.fillStyle = '#f9f9f9'
     drawAreaContext.fillRect(
@@ -64,34 +47,32 @@ function init () {
       drawAreaContext.canvas.height
     )
 
-    const colorList = getColorList(viewportContext, drawAreaContext, img)
-
-    drawSelectableColors(colorList)
-  }
-
-  function getEventPosition (canvas, evt) {
-    const rect = canvas.getBoundingClientRect()
-    return {
-      x: (evt.changedTouches ? evt.changedTouches[0].clientX : evt.clientX) - rect.left,
-      y: (evt.changedTouches ? evt.changedTouches[0].clientY : evt.clientY) - rect.top
-    }
+    state.availableColors = getColorList(viewportContext, drawAreaContext, state.drawAreaScale)
+    state.paintedColors = Object.assign({}, state.availableColors)
   }
 
   addPressEvent(drawAreaContext.canvas, evt => {
-    attemptDraw(
-      getEventPosition(drawAreaContext.canvas, evt),
-      viewportContext,
-      drawAreaContext,
-      resultContext,
-      img,
-      panzoomInstance
-    )
+    const pos = normalizeEventPosition(getEventPosition(drawAreaContext.canvas, evt), viewportContext, panzoomInstance)
+    const color = getColorAtPos(viewportContext, pos)
+
+    if (evt.shiftKey) {
+      forEachPixel(viewportContext, (x, y, c) =>
+        c === color && attemptDraw({ x, y }, color, viewportContext, drawAreaContext, resultContext))
+    } else {
+      attemptDraw(
+        pos,
+        color,
+        viewportContext,
+        drawAreaContext,
+        resultContext
+      )
+    }
   })
 }
 
 function loadImage () {
   const img = new Image()
-  img.src = imageSrc
+  img.src = state.imageSrc
   img.crossOrigin = 'anonymous'
   img.onerror = function () {
     console.error('could not load image')
@@ -99,129 +80,81 @@ function loadImage () {
   return img
 }
 
-function drawSelectableColors (colorList) {
+function drawSelectableColors ({ availableColors, paintedColors, currentColor }) {
   const container = document.getElementById('colorselect')
 
-  Object.keys(colorList).forEach((color, index) => {
+  if (!container) {
+    return null
+  }
+
+  container.innerHTML = ''
+
+  Object.keys(availableColors).forEach((color, index) => {
+    const usage = paintedColors[color] === availableColors[color]
+      ? 0
+      : ((availableColors[color] - paintedColors[color]) / availableColors[color]) * 100
     const colorEl = document.createElement('div')
+    const colorPercentageEl = document.createElement('div')
     colorEl.style.background = color
     colorEl.style.color = getContrast50(color)
-    colorEl.innerHTML = index + 1
-    colorEl.dataset.available = colorList[color]
+    colorEl.innerHTML = Math.floor(usage) === 100 ? '✅' : `${index + 1}`
+    colorEl.dataset.painted = usage
+    colorEl.title = `${Math.floor(usage)}% done`
 
-    function eventHandler () {
-      currentColor = color
+    colorPercentageEl.style.height = `${100 - Math.floor(usage)}%`
 
-      for (let i = 0; i < container.children.length; i++) {
-        container.children[i].className = ''
-      }
-
+    if (currentColor === color) {
       colorEl.className = 'selected'
     }
 
-    addPressEvent(colorEl, eventHandler)
+    addPressEvent(colorEl, () => {
+      state.currentColor = color
+    })
 
-    if (index === 0) {
-      eventHandler()
+    if (index === 0 && !state.currentColor) {
+      state.currentColor = color
     }
 
+    colorEl.appendChild(colorPercentageEl)
     container.appendChild(colorEl)
   })
 }
 
-function componentToHex (c) {
-  const hex = c.toString(16)
-  return hex.length === 1 ? '0' + hex : hex
-}
+function normalizeEventPosition ({ x, y }, viewportContext, panzoomInstance) {
+  const scale = panzoomInstance.getTransform().scale
 
-function rgbToHex (r, g, b) {
-  return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b)
-}
-
-function getContrast50 (hexcolor) {
-  return parseInt(hexcolor.replace('#', ''), 16) > 0xffffff / 2
-    ? 'black'
-    : 'white'
+  return {
+    x: Math.ceil(x / scale / state.drawAreaScale) - 1,
+    y: Math.ceil(y / scale / state.drawAreaScale) - 1
+  }
 }
 
 function attemptDraw (
-  pos,
+  { x, y },
+  color,
   viewportContext,
   drawAreaContext,
-  resultContext,
-  img,
-  panzoomInstance
+  resultContext
 ) {
-  const scale = panzoomInstance.getTransform().scale
-  const x = Math.ceil(pos.x / scale / drawAreaScale) - 1
-  const y = Math.ceil(pos.y / scale / drawAreaScale) - 1
+  const colorAtPos = getColorAtPos(drawAreaContext, {
+    x: (x * state.drawAreaScale) + state.drawAreaScale / 2,
+    y: (y * state.drawAreaScale) + state.drawAreaScale / 2
+  })
 
-  const [r, g, b] = viewportContext.getImageData(x, y, 1, 1).data
-
-  const color = rgbToHex(r, g, b)
-
-  if (currentColor === color) {
+  if (state.currentColor === color && colorAtPos !== color) {
     drawAreaContext.fillStyle = color
     drawAreaContext.fillRect(
-      x * drawAreaScale,
-      y * drawAreaScale,
-      drawAreaScale,
-      drawAreaScale
+      x * state.drawAreaScale,
+      y * state.drawAreaScale,
+      state.drawAreaScale,
+      state.drawAreaScale
     )
 
     resultContext.fillStyle = color
     resultContext.fillRect(x, y, 1, 1)
+
+    state.paintedColors[color] -= 1
   }
-}
-
-function forEachPixel (viewportContext, cb) {
-  const result = []
-  const { width, height } = viewportContext.canvas
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      const [r, g, b] = viewportContext.getImageData(x, y, 1, 1).data
-
-      const color = rgbToHex(r, g, b)
-      const unique = !result.includes(color)
-
-      if (unique) {
-        result.push(color)
-      }
-
-      cb(x, y, color, result.indexOf(color), unique)
-    }
-  }
-}
-
-function getColorList (viewportContext, drawAreaContext, img) {
-  const result = {}
-
-  forEachPixel(viewportContext, (x, y, color, colorIndex, unique) => {
-    drawAreaContext.beginPath()
-    drawAreaContext.rect(
-      x * drawAreaScale,
-      y * drawAreaScale,
-      drawAreaScale,
-      drawAreaScale
-    )
-    drawAreaContext.stroke()
-    drawAreaContext.fillStyle = '#000'
-    drawAreaContext.font = 0.3 * drawAreaScale + 'px Arial'
-    drawAreaContext.textAlign = 'center'
-    drawAreaContext.fillText(
-      colorIndex + 1,
-      x * drawAreaScale + drawAreaScale / 2,
-      y * drawAreaScale + drawAreaScale / 2 + (0.3 * drawAreaScale) / 2
-    )
-
-    if (unique) {
-      result[color] = 0
-    } else {
-      result[color] += 1
-    }
-  })
-
-  return result
 }
 
 document.addEventListener('DOMContentLoaded', init)
