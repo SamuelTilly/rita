@@ -9,7 +9,7 @@
   "private": false,
   "scripts": {
     "start": "parcel index.html file50x50.gif",
-    "build": "parcel build index.html file50x50.gif",
+    "build": "parcel build index.html file50x50.gif --public-url ./rita/",
     "lint": "standard src && stylelint 'src/**/*.scss' --fix"
   },
   "devDependencies": {

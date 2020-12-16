@@ -11,7 +11,7 @@ export const state = observable({
     smoothScroll: true
   },
   drawAreaScale: 100,
-  imageSrc: '/file50x50.gif',
+  imageSrc: 'file50x50.gif',
   currentColor: undefined,
   availableColors: {},
   paintedColors: {}
