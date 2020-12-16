@@ -6,8 +6,6 @@ import { state } from './state'
 import { observe } from 'dob'
 
 observe(() => {
-  console.log('state changed', state)
-
   drawSelectableColors(state)
 })
 
