@@ -11,7 +11,6 @@ observe(() => {
 
 function addPressEvent (el, cb) {
   if (isTouchDevice()) {
-    console.log('touch event')
     el.addEventListener('touchend', cb)
   } else {
     el.addEventListener('mouseup', cb)
