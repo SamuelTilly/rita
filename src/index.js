@@ -1,21 +1,13 @@
 import panzoom from 'panzoom'
-import { isTouchDevice } from './common/validate'
 import { getContrast50 } from './common/color'
-import { getContext, getColorList, getEventPosition, forEachPixel, getColorAtPos } from './common/canvas'
+import { getContext, getColorList, forEachPixel, getColorAtPos } from './common/canvas'
 import { state } from './state'
 import { observe } from 'dob'
+import { addPressEvent } from './common/event'
 
 observe(() => {
   drawSelectableColors(state)
 })
-
-function addPressEvent (el, cb) {
-  if (isTouchDevice()) {
-    el.addEventListener('touchend', cb)
-  } else {
-    el.addEventListener('mouseup', cb)
-  }
-}
 
 function init () {
   const img = loadImage()
@@ -49,17 +41,16 @@ function init () {
   }
 
   addPressEvent(drawAreaContext.canvas, evt => {
-    const pos = normalizeEventPosition(getEventPosition(drawAreaContext.canvas, evt), viewportContext, panzoomInstance)
+    const pos = normalizeEventPosition(evt.pos, panzoomInstance)
     const color = getColorAtPos(viewportContext, pos)
 
     if (evt.shiftKey) {
       forEachPixel(viewportContext, (x, y, c) =>
-        c === color && attemptDraw({ x, y }, color, viewportContext, drawAreaContext, resultContext))
+        c === color && attemptDraw({ x, y }, color, drawAreaContext, resultContext))
     } else {
       attemptDraw(
         pos,
         color,
-        viewportContext,
         drawAreaContext,
         resultContext
       )
@@ -117,7 +108,7 @@ function drawSelectableColors ({ availableColors, paintedColors, currentColor })
   })
 }
 
-function normalizeEventPosition ({ x, y }, viewportContext, panzoomInstance) {
+function normalizeEventPosition ({ x, y }, panzoomInstance) {
   const scale = panzoomInstance.getTransform().scale
 
   return {
@@ -129,7 +120,6 @@ function normalizeEventPosition ({ x, y }, viewportContext, panzoomInstance) {
 function attemptDraw (
   { x, y },
   color,
-  viewportContext,
   drawAreaContext,
   resultContext
 ) {

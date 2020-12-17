@@ -53,14 +53,6 @@ export function getColorList (viewportContext, drawAreaContext, drawAreaScale) {
   return result
 }
 
-export function getEventPosition (canvas, evt) {
-  const rect = canvas.getBoundingClientRect()
-  return {
-    x: (evt.changedTouches ? evt.changedTouches[0].clientX : evt.clientX) - rect.left,
-    y: (evt.changedTouches ? evt.changedTouches[0].clientY : evt.clientY) - rect.top
-  }
-}
-
 export function getColorAtPos (context, { x, y }) {
   const [r, g, b] = context.getImageData(x, y, 1, 1).data
   return rgbToHex(r, g, b)
